@@ -1,10 +1,10 @@
 import logging
 from aiogram import Bot, Dispatcher, types
-from aiogram.filters.command import Command
 from dotenv import load_dotenv
 from parser_bot.config import BOT_TOKEN
 import asyncio
 from bot.handlers.commands import router
+
 logging.basicConfig(level=logging.INFO)
 
 load_dotenv()
