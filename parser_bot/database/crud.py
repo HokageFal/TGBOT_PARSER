@@ -17,7 +17,8 @@ async def get_user(session, telegram_id: int, username: int):
 
     return user
 
-async def get_skills(session, telegram_id: int, skills: list) -> list:
+async def add_skills(session, telegram_id: int, skills: list) -> list:
+    skills = set(skills)
     await session.execute(
         delete(Skill).where(Skill.user_id == telegram_id)
     )
@@ -30,3 +31,18 @@ async def get_skills(session, telegram_id: int, skills: list) -> list:
     await session.commit()
 
     return new_skill
+
+async def get_skills(session, telegram_id: int) -> list:
+    result = await session.execute(select(Skill.title).filter(Skill.user_id==telegram_id))
+    skills = result.scalars().all()
+
+    return skills
+
+async def delete_skill(session, telegram_id: int, skill_name: str):
+    await session.execute(delete(Skill).filter(
+        Skill.title==skill_name, Skill.user_id==telegram_id))
+
+    await session.commit()
+
+    return {"message": "Навык удален"}
+

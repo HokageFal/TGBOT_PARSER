@@ -1,6 +1,8 @@
 from codecs import backslashreplace_errors
 from collections.abc import Mapping
 from datetime import datetime
+from enum import unique
+
 from sqlalchemy import ForeignKey, String, Text, Boolean, DateTime, Integer
 from parser_bot.database.core import Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -23,3 +25,9 @@ class Skill(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, unique=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.telegram_id"))
     title: Mapped[str] = mapped_column(String(255), unique=True)
+
+# class Question(Base):
+#     __tablename__ = "questions"
+#
+#     id: Mapped[int] = mapped_column(Integer, primery_key=True, unique=True)
+#     skill_id: Mapped[int] = mapped_column(ForeignKey("skills.id"))
