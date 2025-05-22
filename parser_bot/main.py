@@ -3,16 +3,29 @@ from aiogram import Bot, Dispatcher, types
 from dotenv import load_dotenv
 from parser_bot.config import BOT_TOKEN
 import asyncio
-from bot.handlers.commands import router
+from bot.handlers import routers
+from aiogram.types import BotCommand
 
 logging.basicConfig(level=logging.INFO)
 
 load_dotenv()
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
-dp.include_router(router)
 
+for router in routers:
+    dp.include_router(router)
 
+async def set_main_menu(bot: Bot):
+
+    # Создаем список с командами и их описанием для кнопки menu
+    main_menu_commands = [
+        BotCommand(command='/start',
+                   description='Запустить бота'),
+    ]
+
+    await bot.set_my_commands(main_menu_commands)
+
+dp.startup.register(set_main_menu)
 
 async def main():
     await dp.start_polling(bot)

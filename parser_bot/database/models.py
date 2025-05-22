@@ -1,33 +1,57 @@
-from codecs import backslashreplace_errors
-from collections.abc import Mapping
 from datetime import datetime
-from enum import unique
-
-from sqlalchemy import ForeignKey, String, Text, Boolean, DateTime, Integer
-from parser_bot.database.core import Base
+from sqlalchemy import ForeignKey, String, Text, Integer, Table, Column
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from typing import List
+from parser_bot.database.core import Base
+
+# Определяем ассоциативную таблицу для связи многие-ко-многим
+user_skill_association = Table(
+    'user_skills',
+    Base.metadata,
+    Column('user_id', ForeignKey('users.telegram_id'), primary_key=True),
+    Column('skill_id', ForeignKey('skills.id'), primary_key=True)
+)
 
 class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, unique=True)
     telegram_id: Mapped[int] = mapped_column(unique=True)
-    username: Mapped[str] = mapped_column()
-    first_name: Mapped[str] = mapped_column(nullable=True)
-    created_at: Mapped[datetime]
+    username: Mapped[str] = mapped_column(String(50))
+    first_name: Mapped[str] = mapped_column(String(50), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
 
-    skills: Mapped[List["Skill"]] = relationship()
+    # Связь многие-ко-многим с навыками через ассоциативную таблицу
+    skills: Mapped[list["Skill"]] = relationship(
+        secondary=user_skill_association,
+        back_populates="users"
+    )
+
 
 class Skill(Base):
     __tablename__ = "skills"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, unique=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.telegram_id"))
     title: Mapped[str] = mapped_column(String(255), unique=True)
 
-# class Question(Base):
-#     __tablename__ = "questions"
-#
-#     id: Mapped[int] = mapped_column(Integer, primery_key=True, unique=True)
-#     skill_id: Mapped[int] = mapped_column(ForeignKey("skills.id"))
+    # Связь с пользователями
+    users: Mapped[list["User"]] = relationship(
+        secondary=user_skill_association,
+        back_populates="skills"
+    )
+
+    # Связь с вопросами (один-ко-многим)
+    questions: Mapped[list["Question"]] = relationship(
+        back_populates="skill",
+        cascade="all, delete-orphan"
+    )
+
+
+class Question(Base):
+    __tablename__ = "questions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, unique=True)
+    text: Mapped[str] = mapped_column(Text)
+
+    # Связь с навыком
+    skill_id: Mapped[int] = mapped_column(ForeignKey("skills.id"))
+    skill: Mapped["Skill"] = relationship(back_populates="questions")
