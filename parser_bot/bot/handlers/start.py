@@ -52,6 +52,11 @@ async def cmd_start(message: types.Message):
 
 @router.callback_query(F.data=="back_to_start")
 async def back_start(callback: types.CallbackQuery):
+    try:
+        await callback.message.delete()
+    except:
+        pass
+
     builder = InlineKeyboardBuilder()
     builder.add(
         types.InlineKeyboardButton(

@@ -108,7 +108,40 @@ async def add_to_db_user(callback: types.CallbackQuery):
 
         builder = InlineKeyboardBuilder()
 
-        builder.add(types.InlineKeyboardButton(text="Назад", callback_data="back_to_start"))
+        builder.add(types.InlineKeyboardButton(text="Назад", callback_data="back_to_pagination"))
 
         await callback.message.answer(text="Вы успешно добавили навык в свою коллекцию",
                                       reply_markup=builder.as_markup())
+
+@router.callback_query(F.data=="back_to_pagination")
+async def back_to_pagination(callback: types.CallbackQuery):
+    async for session in get_db():
+        try:
+            await callback.message.delete()
+        except:
+            pass
+
+        items = await get_skill_pagination(session=session, page=1)
+        total_items = await get_total_items(session=session)
+        total_pages = max(1, (total_items + 4) // 5)
+        builder = InlineKeyboardBuilder()
+
+        for i in items:
+            builder.add(types.InlineKeyboardButton(text=i, callback_data=f"add_skill_{i}"))
+
+        buttons = []
+        if total_pages > 1:
+            buttons.append(InlineKeyboardButton(text="➡️", callback_data=f"next_2"))
+
+        if buttons:
+            builder.row(*buttons)
+
+        builder.row(types.InlineKeyboardButton(
+            text="Отмена",
+            callback_data="back_to_start"
+        ))
+
+        await callback.message.answer(
+            f"Выберите навык из выделенных чтобы добавить в список твоих навыков:\n Страница 1/{total_pages}",
+            reply_markup=builder.as_markup()
+        )
