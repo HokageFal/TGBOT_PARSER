@@ -1,5 +1,6 @@
 from datetime import datetime
 from sqlalchemy import ForeignKey, String, Text, Integer, Table, Column
+from sqlalchemy import BigInteger
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from parser_bot.database.core import Base
 
@@ -15,7 +16,7 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, unique=True)
-    telegram_id: Mapped[int] = mapped_column(unique=True)
+    telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True)
     username: Mapped[str] = mapped_column(String(50))
     first_name: Mapped[str] = mapped_column(String(50), nullable=True)
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)

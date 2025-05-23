@@ -8,6 +8,38 @@ from parser_bot.database.crud import get_skill_pagination, get_total_items, add_
 
 router = Router()
 
+@router.callback_query(F.data == "add_skills_manual")
+async def ask_for_skill_for_inline(callback: types.CallbackQuery):
+    async for session in get_db():
+        try:
+            await callback.message.delete()
+        except:
+            pass
+
+        items = await get_skill_pagination(session=session, page=1)
+        total_items = await get_total_items(session=session)
+        total_pages = max(1, (total_items + 4) // 5)
+        builder = InlineKeyboardBuilder()
+
+        for i in items:
+            builder.add(types.InlineKeyboardButton(text=i, callback_data=f"add_skill_{i}"))
+
+        buttons = []
+        if total_pages > 1:
+            buttons.append(InlineKeyboardButton(text="➡️", callback_data=f"next_2"))
+
+        if buttons:
+            builder.row(*buttons)
+
+        builder.row(types.InlineKeyboardButton(
+            text="Отмена",
+            callback_data="back_to_start"
+        ))
+
+        await callback.message.answer(
+            f"Выберите навык из выделенных чтобы добавить в список твоих навыков:\n Страница 1/{total_pages}",
+            reply_markup=builder.as_markup()
+        )
 
 @router.message(F.text == "Добавить навыки в ручную")
 async def ask_for_skill(message: types.Message):
@@ -17,8 +49,8 @@ async def ask_for_skill(message: types.Message):
         except:
             pass
 
-        items = await get_skill_pagination(session=session, page=1)
-        total_items = await get_total_items(session=session)
+        items = await get_skill_pagination(session=session, user_id=message.from_user.id, page=1)
+        total_items = await get_total_items(session=session, user_id=message.from_user.id)
         total_pages = max(1, (total_items + 4) // 5)
         builder = InlineKeyboardBuilder()
 
@@ -59,8 +91,8 @@ async def handle_pagination(callback: types.CallbackQuery):
         else:
             new_page = current_page
 
-        items = await get_skill_pagination(session=session, page=new_page)
-        total_items = await get_total_items(session=session)
+        items = await get_skill_pagination(session=session, page=new_page, user_id=callback.from_user.id)
+        total_items = await get_total_items(session=session,  user_id=callback.from_user.id)
         total_pages = max(1, (total_items + 4) // 5)
 
         if new_page > total_pages:
@@ -121,8 +153,8 @@ async def back_to_pagination(callback: types.CallbackQuery):
         except:
             pass
 
-        items = await get_skill_pagination(session=session, page=1)
-        total_items = await get_total_items(session=session)
+        items = await get_skill_pagination(session=session, page=1, user_id=callback.from_user.id)
+        total_items = await get_total_items(session=session, user_id=callback.from_user.id)
         total_pages = max(1, (total_items + 4) // 5)
         builder = InlineKeyboardBuilder()
 

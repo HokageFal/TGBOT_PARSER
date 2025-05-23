@@ -30,8 +30,5 @@ dp.startup.register(set_main_menu)
 async def main():
     await dp.start_polling(bot)
 
-# 1. Починить инлайн кнопки при старте
-# 2. Сделать возвращение на пагинацию при добавлении в колецию
-
 if __name__ == "__main__":
     asyncio.run(main())

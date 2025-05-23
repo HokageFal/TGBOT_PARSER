@@ -102,15 +102,32 @@ async def get_question_for_skills(session, skill_title: str):
 
     return result
 
-async def get_skill_pagination(session, page: int, limit: int = 5):
+async def get_skill_pagination(session, user_id: int, page: int, limit: int = 5):
     offset = (page - 1) * limit
 
-    result = await session.execute(select(Skill.title).order_by(Skill.id).limit(limit).offset(offset))
+    user_skills_subquery = (
+        select(user_skill_association.c.skill_id)
+        .where(user_skill_association.c.user_id == user_id)
+        .subquery()
+    )
+
+    result = await session.execute(select(Skill.title).
+                                   where(~Skill.id.in_(user_skills_subquery)).
+                                   order_by(Skill.id).
+                                   limit(limit).
+                                   offset(offset))
     skills = result.scalars().all()
 
     return skills
 
-async def get_total_items(session):
-    query = select(func.count()).select_from(Skill)
+async def get_total_items(session, user_id: int):
+    user_skills_subquery = (
+        select(user_skill_association.c.skill_id)
+        .where(user_skill_association.c.user_id == user_id)
+        .subquery()
+    )
+
+
+    query = select(func.count()).where(~Skill.id.in_(user_skills_subquery)).select_from(Skill)
     result = await session.execute(query)
     return result.scalar()

@@ -5,15 +5,29 @@ from parser_bot.database.crud import get_skills, add_skill, delete_skill, add_sk
 
 router = Router()
 
+@router.callback_query(F.data=="my_skills")
+async def my_skills_for_inline(callback: types.CallbackQuery):
+    async for session in get_db():
+        try:
+            await callback.message.delete()
+        except:
+            pass
+
+        builder = InlineKeyboardBuilder()
+        skills = await get_skills(session, callback.from_user.id)
+        if not skills:
+            await callback.message.answer("У вас нет навыков, отправьте свое резюме в чат")
+
+        for i in skills:
+            builder.add(types.InlineKeyboardButton(text=i, callback_data=f"skill_{i}"))
+
+        builder.add(types.InlineKeyboardButton(text="Назад", callback_data="back_to_start"))
+        builder.adjust(3)
+
+        await callback.message.answer(f"Ваши навыки", reply_markup=builder.as_markup())
+
 @router.message(F.text == "Мои навыки")
-@router.callback_query(F.data == "my_skills")
-async def my_skills(request: types.Message | types.CallbackQuery):
-    if isinstance(request, types.CallbackQuery):
-        message = request.message
-    else:
-        message = request
-
-
+async def my_skills(message: types.Message):
     async for session in get_db():
         try:
             await message.delete()
@@ -76,7 +90,7 @@ async def delete_skills(callback: types.CallbackQuery):
         builder = InlineKeyboardBuilder()
         builder.add(types.InlineKeyboardButton(
             text="Назад",
-            callback_data="back_to_start"
+            callback_data="back_to_skills"
         ))
 
         await callback.message.answer(f"Навык успешно удален", reply_markup=builder.as_markup())
