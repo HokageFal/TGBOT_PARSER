@@ -12,7 +12,6 @@ def extract_section(text: str | None) -> str | list:
     else:
         raise ValueError(f"Раздел между '{start}' и '{end}' не найден")
 
-
 def individual_word(text: str | None) -> list:
     pattern = re.findall(r'\b[a-zA-Z]+\b', text)
     return pattern

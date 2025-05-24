@@ -16,8 +16,8 @@ async def ask_for_skill_for_inline(callback: types.CallbackQuery):
         except:
             pass
 
-        items = await get_skill_pagination(session=session, page=1)
-        total_items = await get_total_items(session=session)
+        items = await get_skill_pagination(session=session, page=1, user_id=callback.from_user.id)
+        total_items = await get_total_items(session=session, user_id=callback.from_user.id)
         total_pages = max(1, (total_items + 4) // 5)
         builder = InlineKeyboardBuilder()
 
